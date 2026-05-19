@@ -37,8 +37,8 @@ def batch_resize_pngs(input_folder, output_folder, target_size=(25, 25)):
 # --- Example Usage ---
 
 # Choice A: Resize just one image
-resize_single_png('orange_cone.png', 'orange_cone_25x25.png')
-resize_single_png('blue_cone.png', 'blue_cone_25x25.png')
+resize_single_png('car2.png', 'car_25x25.gif', (50, 50))
+
 
 # Choice B: Resize an entire folder of PNGs (Uncomment to use)
 # batch_resize_pngs('./input_images', './output_images')

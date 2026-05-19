@@ -1,6 +1,8 @@
-import turtle
+import math
 import random
-    
+import time
+import turtle
+
     
 
 class Display():
@@ -9,7 +11,7 @@ class Display():
         self.screen.setup(width=700, height=700)
         self.screen.bgcolor("green")
         self.screen.tracer(0)
-        self.sprites = ["orange_cone.gif", "blue_cone.gif"]
+        self.sprites = ["orange_cone_25x25.gif", "blue_cone_25x25.gif", "car_25x25.gif"]
         for sprite in self.sprites:
             self.screen.register_shape(sprite)
     
@@ -56,6 +58,35 @@ class HelperFunctions():
         # Add the last point as is
         new_points.append(points[-1])
         return new_points
+        
+
+
+
+class Car(turtle.Turtle):
+    def __init__(self, start_pos=(0,0)):
+        turtle.Turtle.__init__(self)
+        self.penup()
+        self.shape("car_25x25.gif")
+        self.setpos(start_pos[0], start_pos[1])
+        
+    def drive_trajectory(self, waypoints, screen):
+        # Set a step size for how many pixels the car moves per animation frame
+        step_size = 5 
+        
+        for point in waypoints:
+            # 1. Face the next point
+            self.setheading(self.towards(point[0], point[1]))
+            
+            # 2. Drive forward incrementally until reaching the point
+            while self.distance(point[0], point[1]) > step_size:
+                self.forward(step_size)
+                screen.update()  # Refresh the screen to show the car moving
+                time.sleep(0.01) # Small delay to keep the driving speed realistic
+            
+            # 3. Snap precisely to the final coordinate and pause
+            self.setpos(point[0], point[1])
+            screen.update()
+            time.sleep(0.001)  # 500ms delay at the waypoint
     
 
 
@@ -66,9 +97,9 @@ class Cone(turtle.Turtle):
         self.penup()
         self.setpos(pos[0], pos[1])
         if cone_type == "orange":
-            self.shape("orange_cone.gif")
+            self.shape("orange_cone_25x25.gif")
         elif cone_type == "blue":
-            self.shape("blue_cone.gif")
+            self.shape("blue_cone_25x25.gif")
         else:
             self.shape("circle")
             self.color("red")
@@ -82,10 +113,14 @@ class Simulation():
     def __init__(self):
         self.orange_cones = []
         self.blue_cones = []
-        self.track_width = 150
+        self.track_width = 100
         self.cone_spacing = 25
         self.horizontal_noise = 0
         self.vertical_noise = 0
+        
+        
+        #trajectory points
+        self.trajectory_way_points = []
     
     
     def draw_cone_trajectories(self):
@@ -140,7 +175,9 @@ class Simulation():
         for i in range(len(mid_points)-1):
             mid_point_current = mid_points[i]
             mid_point_next = mid_points[i+1]
-            Grapher().draw_line("white", mid_point_current, mid_point_next,5)
+            Grapher().draw_line("red", mid_point_current, mid_point_next,5)
+            
+        self.trajectory_way_points = mid_points
 
         
     
@@ -148,7 +185,7 @@ class Simulation():
 
         for i in range(-10,10,1):
             y = i * self.cone_spacing
-            offset = 0.005 * (y**2)  # tweak 0.02 to make the arc more or less curved
+            offset = math.sin(i) * 30 #0.005 * (y**2)  # tweak 0.02 to make the arc more or less curved
             
             self.orange_cones.append(Cone("orange", pos=(self.track_width + offset - 100 + random.uniform(-self.horizontal_noise,self.horizontal_noise),i*self.cone_spacing + random.uniform(-self.vertical_noise,self.vertical_noise))))
             self.blue_cones.append(Cone("blue", pos=(-self.track_width + offset - 100 + random.uniform(-self.horizontal_noise,self.horizontal_noise), i*self.cone_spacing + random.uniform(-self.vertical_noise,self.vertical_noise))))
@@ -160,6 +197,13 @@ class Simulation():
         self.setCones()
         self.draw_cone_trajectories()
         self.draw_middle_trajectory()
+        
+        car = Car(start_pos=self.trajectory_way_points[0])
+        
+        car.drive_trajectory(self.trajectory_way_points, display.screen)
+        
+        
+        
         display.screen.update()
         display.screen.mainloop()
 
